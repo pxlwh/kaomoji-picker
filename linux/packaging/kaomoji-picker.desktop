@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Kaomoji Picker
+Comment=Searchable kaomoji picker in the system tray
+Exec=kaomoji-picker
+Icon=kaomoji-picker
+Categories=Utility;
+Terminal=false
+StartupWMClass=kaomoji-picker
