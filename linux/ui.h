@@ -8,11 +8,14 @@ void kp_post(int cmd);
 void kp_tray(const char *icon);
 void kp_set_icon(const char *icon);
 void kp_set_css(const char *css);
+void kp_set_palette(unsigned accent, unsigned accent_dim, unsigned bg, unsigned text, unsigned secondary);
+int kp_render(const char *path, const char *query, int settings, int screen, int w, int h); // headless, no GTK init; 0 = ok; screen: paint as a w x h layer surface
 
 void kp_show(int keep_above);
 void kp_hide(void);
 int kp_visible(void);
 void kp_set_keep_above(int on);
+int kp_layer_compiled(void);
 
 void kp_set_count(const char *text);
 void kp_clear_chips(void);
@@ -26,4 +29,6 @@ double kp_get_scroll(void);
 void kp_set_scroll(double v);
 
 void kp_copy(const char *text);
-void kp_settings(const char *hex, int paste, int top, int tags);
+void kp_settings(const char *hex, int paste, int top, int tags); // safe headless
+const char *kp_diag(void);
+const char *kp_diag_window(void);

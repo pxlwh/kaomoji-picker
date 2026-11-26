@@ -126,28 +126,20 @@ func contrast(a, b uint32) float64 {
 	return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 }
 
-// css styles the picker and settings dialog; names are the widget names/classes set in ui.c.
+// css covers every real GTK surface left: the picker window (transparent, the canvas paints it),
+// the two chromeless entries over the canvas (search, settings hex), and the tray menu. ui.c
+// prepends the UI font family.
 func (p Palette) css() string {
 	return fmt.Sprintf(`
-#kp-root { background: %[2]s; }
-#kp-panel { background: %[3]s; border: 1px solid %[4]s; border-radius: 10px; padding: 12px; }
-#kp-panel label, #kp-settings label { color: %[5]s; }
-#kp-title { font-weight: bold; font-size: 15pt; }
-#kp-count, .kp-tags { color: %[6]s; }
-.kp-tags { font-size: 8pt; }
-#kp-panel entry, #kp-settings entry { background: %[2]s; color: %[5]s; caret-color: %[1]s; border: 1px solid %[1]s; border-radius: 6px; box-shadow: none; }
-#kp-panel scrolledwindow, #kp-panel viewport, #kp-panel flowbox { background: transparent; border: none; }
-button.kp-chip { background: %[8]s; color: %[6]s; border: 1px solid %[4]s; border-radius: 12px; padding: 2px 10px; box-shadow: none; text-shadow: none; -gtk-icon-shadow: none; }
-button.kp-chip label { color: %[6]s; }
-button.kp-chip.kp-on, button.kp-chip.kp-on:hover { background: %[7]s; border-color: %[1]s; }
-button.kp-chip.kp-on label { color: %[5]s; }
-flowboxchild { border-radius: 8px; padding: 0; border: 1px solid transparent; }
-flowboxchild:hover { background: %[8]s; }
-flowboxchild:selected { background: %[7]s; border-color: %[1]s; }
-.kp-face { font-family: "Noto Sans Mono CJK JP", "Noto Sans CJK JP", monospace; font-size: 15pt; }
-.kp-star { color: %[1]s; font-size: 11pt; margin: 4px 6px; }
-#kp-settings { background: %[3]s; }
-`, hex(p.Accent), hex(p.Bg), hex(p.Panel), hex(p.AccentDim), hex(p.Text), hex(p.Secondary), hex(p.Selected), hex(p.Hover))
+* { color: %[3]s; border-radius: 0; box-shadow: none; text-shadow: none; -gtk-icon-shadow: none; outline: none; background-image: none; }
+window, .background { background-color: %[2]s; color: %[3]s; }
+#kp-root, #kp-root.background, #kp-root > *, #kp-root overlay, #kp-root drawingarea,
+overlay, drawingarea, box { background: transparent; background-image: none; box-shadow: none; border: none; }
+selection, *:selected { background-color: %[4]s; color: %[3]s; }
+#kp-search, #kp-search:focus, #kp-hex, #kp-hex:focus { background: none; border: none; box-shadow: none; padding: 0; min-height: 0; color: %[3]s; caret-color: %[1]s; font-size: 14px; }
+menu, .menu, menuitem { background-color: %[2]s; color: %[3]s; }
+menuitem:hover { background-color: %[5]s; }
+`, hex(p.Accent), hex(p.Bg), hex(p.Text), hex(p.Selected), hex(p.Hover))
 }
 
 // tintHeart repaints the heart in the accent colour, keeping its alpha channel as the mask.

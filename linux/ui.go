@@ -3,6 +3,7 @@ package main
 /*
 #cgo pkg-config: gtk+-3.0 ayatana-appindicator3-0.1
 #cgo CFLAGS: -Wno-deprecated-declarations
+#cgo LDFLAGS: -lm
 #include <stdlib.h>
 #include "ui.h"
 */
@@ -17,6 +18,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 	"unsafe"
 )
@@ -57,6 +59,42 @@ func sendCmd(cmd string) error {
 
 var errRunning = errors.New("already running")
 
+// toggleOrStart toggles the running instance; with none listening it start()s one and retries
+// until its socket answers, so the toggle lands and opens the fresh instance's picker.
+func toggleOrStart(start func() error) error {
+	if sendCmd("toggle") == nil {
+		return nil
+	}
+	if err := start(); err != nil {
+		return err
+	}
+	var err error
+	for end := time.Now().Add(5 * time.Second); time.Now().Before(end); time.Sleep(50 * time.Millisecond) {
+		if err = sendCmd("toggle"); err == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("started, but the socket never answered: %w", err)
+}
+
+// startDetached runs this program with no flags in its own session, outliving the caller.
+// Inside an AppImage it relaunches the AppImage, because our mount goes away when we exit.
+func startDetached() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	if a, d := os.Getenv("APPIMAGE"), os.Getenv("APPDIR"); a != "" && d != "" && strings.HasPrefix(exe, d) {
+		exe = a
+	}
+	cmd := exec.Command(exe)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	return cmd.Process.Release()
+}
+
 // listen claims the socket; a live instance gets "show" instead, a stale socket file is replaced.
 func listen() (net.Listener, error) {
 	if sendCmd("show") == nil {
@@ -86,6 +124,17 @@ func serve(ln net.Listener) {
 	}
 }
 
+// diag prints the display capabilities and exits; used to explain an opaque overlay.
+func diag() int {
+	if C.kp_init() == 0 {
+		fmt.Fprintln(os.Stderr, "kaomoji-picker: cannot open a display")
+		return 1
+	}
+	fmt.Print(C.GoString(C.kp_diag()))
+	fmt.Print(C.GoString(C.kp_diag_window()))
+	return 0
+}
+
 func runApp(ln net.Listener) int {
 	if C.kp_init() == 0 {
 		fmt.Fprintln(os.Stderr, "kaomoji-picker: cannot open a display")
@@ -111,9 +160,12 @@ func runApp(ln net.Listener) int {
 	return 0
 }
 
+// layerCompiled reports whether ui.c was built with gtk-layer-shell (HAVE_LAYER_SHELL).
+func layerCompiled() bool { return C.kp_layer_compiled() != 0 }
+
 // applyTheme pushes the derived CSS and returns the tinted tray icon path.
 func applyTheme() string {
-	accent, _ := parseHex(cfg.Accent)
+	accent := setPalette()
 	c, free := cs(derivePalette(accent).css())
 	C.kp_set_css(c)
 	free()
@@ -125,9 +177,47 @@ func applyTheme() string {
 	return icon
 }
 
+// setPalette hands the canvas its colours and returns the accent.
+func setPalette() uint32 {
+	accent, _ := parseHex(cfg.Accent)
+	p := derivePalette(accent)
+	C.kp_set_palette(C.uint(p.Accent), C.uint(p.AccentDim), C.uint(p.Bg), C.uint(p.Text), C.uint(p.Secondary))
+	return accent
+}
+
+// runRender paints the picker (or, with settings, the settings pane with hexText in the accent
+// field, "" for the saved accent) exactly as on screen into a PNG, without GTK or a display.
+// With screen, w x h is an output and the panel is centred in it as on a layer-shell surface.
+func runRender(path, query string, settings bool, hexText string, screen bool, w, h int) error {
+	var err error
+	if idx, err = readData(); err != nil {
+		return err
+	}
+	cfg = loadSettings(settingsPath())
+	setFavs(loadFavorites(favoritesPath()))
+	setPalette()
+	rebuildChips()
+	st.query = query
+	refilter(firstPage, 0)
+	if settings {
+		if hexText == "" {
+			hexText = cfg.Accent
+		}
+		openSettings(hexText)
+	}
+	p, free1 := cs(path)
+	defer free1()
+	q, free2 := cs(query)
+	defer free2()
+	if s := C.kp_render(p, q, C.int(b2i(settings)), C.int(b2i(screen)), C.int(w), C.int(h)); s != 0 {
+		return fmt.Errorf("render %s: cairo status %d", path, int(s))
+	}
+	return nil
+}
+
 func chipLabel(i int) string {
 	if i == 0 {
-		return "★ favorites " + strconv.Itoa(idx.favCount(favs))
+		return "★ favorites  " + strconv.Itoa(idx.favCount(favs))
 	}
 	return idx.Cats[i-1].Name + " " + strconv.Itoa(idx.Cats[i-1].Count)
 }
@@ -191,9 +281,10 @@ func appendTiles(n int) {
 		free2()
 	}
 	st.limit = end
-	count := fmt.Sprintf("%d matches", len(st.matches))
-	if st.limit < len(st.matches) {
-		count += fmt.Sprintf(" · showing %d", st.limit)
+	// same header text as windows/draw.go
+	count := fmt.Sprintf("%d / %d", st.limit, len(idx.Entries))
+	if st.cat >= 0 || st.favOnly || strings.TrimSpace(st.query) != "" {
+		count = fmt.Sprintf("%d matches · showing %d", len(st.matches), st.limit)
 	}
 	c, free := cs(count)
 	C.kp_set_count(c)
@@ -294,9 +385,8 @@ func goMenu(id C.int) {
 	case 1:
 		C.kp_show(C.int(b2i(cfg.AlwaysOnTop)))
 	case 2:
-		h, free := cs(cfg.Accent)
-		C.kp_settings(h, C.int(b2i(cfg.PasteAfterPick)), C.int(b2i(cfg.AlwaysOnTop)), C.int(b2i(cfg.ShowTags)))
-		free()
+		openSettings(cfg.Accent)
+		C.kp_show(C.int(b2i(cfg.AlwaysOnTop)))
 	case 3:
 		ix, err := readData()
 		if err != nil {
@@ -310,6 +400,13 @@ func goMenu(id C.int) {
 	case 4:
 		C.kp_quit()
 	}
+}
+
+// openSettings switches the canvas to the settings pane, seeded from cfg with hexText in the field.
+func openSettings(hexText string) {
+	h, free := cs(hexText)
+	C.kp_settings(h, C.int(b2i(cfg.PasteAfterPick)), C.int(b2i(cfg.AlwaysOnTop)), C.int(b2i(cfg.ShowTags)))
+	free()
 }
 
 // goSaveSettings returns NULL on success or a malloc'd error message the C side frees.

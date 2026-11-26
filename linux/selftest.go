@@ -22,6 +22,13 @@ type selftestReport struct {
 	Palettes   map[string]paletteReport `json:"palettes"`
 	TrayIconOK bool                     `json:"tray_icon_ok"`
 	SettingsOK bool                     `json:"settings_ok"`
+	LayerShell layerReport              `json:"layer_shell"`
+}
+
+// Runtime stays null here: gtk_layer_is_supported() needs a display, which the self-test never opens.
+type layerReport struct {
+	Compiled bool  `json:"compiled"`
+	Runtime  *bool `json:"runtime"`
 }
 
 // runSelftest touches no display, no real config and no GTK; it runs before gtk_init.
@@ -31,7 +38,7 @@ func runSelftest(out string) error {
 		return err
 	}
 	rep := selftestReport{Version: appVersion, Total: len(ix.Entries), Categories: len(ix.Cats),
-		Queries: map[string]queryResult{}, Palettes: map[string]paletteReport{}}
+		Queries: map[string]queryResult{}, Palettes: map[string]paletteReport{}, LayerShell: layerReport{Compiled: layerCompiled()}}
 	var errs []error
 	for _, q := range []string{"", "e", "cat", "sad", "shrug", "gf", "creepy smile"} {
 		n := len(ix.Filter(q, ""))
