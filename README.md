@@ -21,14 +21,13 @@ Nothing else to install. No account, no telemetry, no network calls. (￣︶￣)
 
 ## What it does
 
-```
-  search: sad                    [ × ]  406 matches
-  ┌──────────┬──────────┬──────────┬──────────┬──────────┐
-  │ (╥﹏╥)    │ (｡•́︿•̀｡) │ (´；ω；`) │ (T_T)    │ (ಥ﹏ಥ)    │
-  ├──────────┼──────────┼──────────┼──────────┼──────────┤
-  │ (ノ_<)   │ (つ﹏⊂)   │ orz      │ (｡╯︵╰｡)  │ (◞‸◟)    │
-  └──────────┴──────────┴──────────┴──────────┴──────────┘
-```
+Type `sad`, get 406 faces laid out as a grid that fills the window — arrows move, `Enter`
+picks, that's it.
+
+| | | | | |
+|---|---|---|---|---|
+| (╥﹏╥) | (｡•́︿•̀｡) | (´；ω；`) | (T_T) | (ಥ﹏ಥ) |
+| (ノ_<) | (つ﹏⊂) | orz | (｡╯︵╰｡) | (◞‸◟；) |
 
 - **Mosaic grid** that auto-fits the window, not a boring one-per-row list (・ω・)ノ
 - **Search that actually finds things.** The sites name their own faces, so we harvest those
@@ -58,7 +57,7 @@ Nothing else to install. No account, no telemetry, no network calls. (￣︶￣)
 
 **Linux**
 - Tray heart: middle click opens the picker (AppIndicator never reports left clicks, so
-  left click opens the menu). Pen-paper quote: same search, same chips, same stars.
+  left click opens the menu). Same search, same chips, same stars.
 - No portable global hotkey exists on Wayland, so the app listens on a socket: wire
   `kaomoji-picker --toggle` (or the AppImage with `--toggle`) to a key in your DE. On X11
   the window opens under the mouse; on Wayland the compositor decides.
