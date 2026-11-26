@@ -3,6 +3,8 @@
 A tray app that opens a searchable grid of **6582 kaomoji**, copies the face you pick and
 pastes it into whatever you were typing in.
 
+![The picker as a layer-shell overlay on Hyprland](docs/screenshot-linux.png)
+
 Two builds, one dataset, one look:
 
 | Platform | Download | What it is |
