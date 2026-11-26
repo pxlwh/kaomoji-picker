@@ -45,6 +45,9 @@ The Linux build becomes an overlay, and the settings dialog stops looking like G
 
 ### Fixed
 
+- The AppImage now ships the full LGPL-3.0 text for the bundled `gtk-layer-shell`
+  (`usr/share/doc/kaomoji-picker/LICENSE-LGPL-3.0.txt`), and both binaries report their own
+  version instead of a hard-coded 1.0.0.
 - The picker closed the moment the pointer left it (focus-follows-mouse counts as focus-out).
   It now hides only on a real focus loss after a grace period, and never while settings is open.
 - The panel was an opaque slab; it is now 0.93 alpha like the Quickshell overlay, so a

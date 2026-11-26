@@ -11,7 +11,7 @@ import (
 
 const (
 	appName    = "Kaomoji Picker (Linux)"
-	appVersion = "1.0.0"
+	appVersion = "1.0.1"
 )
 
 // GTK and every Go callback from it must stay on the main OS thread.

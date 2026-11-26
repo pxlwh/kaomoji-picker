@@ -12,7 +12,7 @@ import (
 
 const (
 	appName       = "Kaomoji Picker"
-	appVersion    = "1.0.0"
+	appVersion    = "1.0.1"
 	msgClass      = "KaomojiPickerMessageWindow" // found by FindWindowW from a second instance
 	settingsClass = "KaomojiPickerSettings"
 	hotkeyClass   = "KaomojiPickerHotkeyBox"

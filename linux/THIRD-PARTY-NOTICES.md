@@ -8,7 +8,8 @@ the binary, so it stays replaceable — which is what its licence asks for.
 
 - Version: 0.10.1 (pinned in `Makefile` by URL and SHA-256)
 - Upstream: https://github.com/wmww/gtk-layer-shell
-- Licence: **LGPL-3.0-or-later**, full text in `LICENSE_LGPL.txt` beside this file
+- Licence: **LGPL-3.0-or-later**: the full text ships as `LICENSE-LGPL-3.0.txt` in this
+directory and at `usr/share/doc/kaomoji-picker/` inside the AppImage
 - What it does here: lets the picker put itself on the Wayland *overlay* layer so it can
   appear above windows on compositors that support `wlr-layer-shell` (Hyprland, Sway, KWin).
   Without it, the app builds and runs as a normal floating window.

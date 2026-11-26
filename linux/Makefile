@@ -71,6 +71,7 @@ appimage: deps
 	install -Dm644 assets/heart256.png AppDir/usr/share/icons/hicolor/256x256/apps/kaomoji-picker.png
 	install -Dm644 assets/heart256.png AppDir/kaomoji-picker.png
 	install -Dm644 THIRD-PARTY-NOTICES.md AppDir/usr/share/doc/kaomoji-picker/THIRD-PARTY-NOTICES.md
+	install -Dm644 LICENSE-LGPL-3.0.txt AppDir/usr/share/doc/kaomoji-picker/LICENSE-LGPL-3.0.txt
 	@LD_LIBRARY_PATH=$(CURDIR)/AppDir/usr/lib ldd AppDir/usr/bin/$(BIN) | grep -q "libgtk-layer-shell.so" || (echo "layer-shell lib not resolved from the bundle" && exit 1)
 	@if LD_LIBRARY_PATH=$(CURDIR)/AppDir/usr/lib ldd AppDir/usr/bin/$(BIN) | grep -q "not found"; then echo "unresolved libraries in the bundle"; exit 1; fi
 	ARCH=x86_64 appimagetool --no-appstream AppDir $(APPIMAGE)
